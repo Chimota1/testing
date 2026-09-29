@@ -37,7 +37,7 @@ public final class InsuranceService {
             return rejected("Страхування недоступне");
         }
         long base = request.insuredAmount() * 2L / 100;
-        long ageFee = request.age() < 25 ? 5_000 : request.age() > 65 ? 8_000 : 0;
+        long ageFee = request.age() <= 25 ? 5_000 : request.age() >= 65 ? 8_000 : 0;
         long risk;
         if (request.smoker() && request.hazardousActivity()) {
             risk = 10_000;

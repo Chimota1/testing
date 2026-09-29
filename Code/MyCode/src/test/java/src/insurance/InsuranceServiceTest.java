@@ -25,7 +25,7 @@ public class InsuranceServiceTest {
     @Test
     void allParamIsFine() {
 
-        Mockito.when(policy.isAllowed()).thenReturn(false);
+        Mockito.when(policy.isAllowed()).thenReturn(true);
         Mockito.when(history.hasNoClaimsDiscount()).thenReturn(true);
         InsuranceService service =
                 new InsuranceService(policy, history, quotes);
@@ -120,7 +120,7 @@ public class InsuranceServiceTest {
         InsuranceService.Request request =
                 new InsuranceService.Request(
                         30,
-                        99999,
+                        100000,
                         false,
                         false
                 );
@@ -237,7 +237,7 @@ public class InsuranceServiceTest {
             "false, false, 3000",
             "true,  false, 5400",
             "false, true,  7200",
-            "true,  true,  10801"
+            "true,  true,  10800"
     })
     void riskCalculation(
             boolean smoker,
@@ -265,5 +265,103 @@ public class InsuranceServiceTest {
                 expectedPremium,
                 result.total()
         );
+    }
+    @Test
+    void requestIsNull() {
+        InsuranceService service =
+                new InsuranceService(policy, history, quotes);
+
+        Assertions.assertThrows(
+                IllegalArgumentException.class,
+                () -> service.process(null)
+        );
+
+        Mockito.verify(policy, Mockito.never()).isAllowed();
+    }
+    @Test
+    void ageIsEquals25() {
+        // рівно на межі "молодого" тарифу — age <= 25 має бути true
+        Mockito.when(policy.isAllowed()).thenReturn(true);
+        Mockito.when(history.hasNoClaimsDiscount()).thenReturn(false);
+
+        InsuranceService service =
+                new InsuranceService(policy, history, quotes);
+
+        InsuranceService.Request request =
+                new InsuranceService.Request(
+                        25,
+                        100000,
+                        false,
+                        false
+                );
+
+        InsuranceService.Result result =
+                service.process(request);
+
+        Assertions.assertEquals(7000, result.total());
+    }
+
+    @Test
+    void ageIsEquals65() {
+        // рівно на межі "похилого" тарифу — age >= 65 має бути true
+        Mockito.when(policy.isAllowed()).thenReturn(true);
+        Mockito.when(history.hasNoClaimsDiscount()).thenReturn(false);
+
+        InsuranceService service =
+                new InsuranceService(policy, history, quotes);
+
+        InsuranceService.Request request =
+                new InsuranceService.Request(
+                        65,
+                        100000,
+                        false,
+                        false
+                );
+
+        InsuranceService.Result result =
+                service.process(request);
+
+        Assertions.assertEquals(10000, result.total());
+    }
+    @Test
+    void insuredAmountTooLow() {
+        InsuranceService service =
+                new InsuranceService(policy, history, quotes);
+
+        InsuranceService.Request request =
+                new InsuranceService.Request(
+                        30,
+                        99_999,
+                        false,
+                        false
+                );
+
+        Assertions.assertThrows(
+                IllegalArgumentException.class,
+                () -> service.process(request)
+        );
+
+        Mockito.verify(policy, Mockito.never()).isAllowed();
+    }
+
+    @Test
+    void insuredAmountTooHigh() {
+        InsuranceService service =
+                new InsuranceService(policy, history, quotes);
+
+        InsuranceService.Request request =
+                new InsuranceService.Request(
+                        30,
+                        10_000_001,
+                        false,
+                        false
+                );
+
+        Assertions.assertThrows(
+                IllegalArgumentException.class,
+                () -> service.process(request)
+        );
+
+        Mockito.verify(policy, Mockito.never()).isAllowed();
     }
 }
