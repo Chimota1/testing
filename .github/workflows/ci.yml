@@ -10,6 +10,11 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
+    # Вказуємо папку, у якій лежить pom.xml
+    defaults:
+      run:
+        working-directory: sut-b
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -21,18 +26,16 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      # Етап 1: Build (Компіляція проєкту)
       - name: Build project
         run: mvn clean compile
 
-      # Етап 2 та 3: Unit, Integration & REST API Tests (Testcontainers + RestAssured + WireMock)
       - name: Run Unit & API Tests
         run: mvn test
 
-      # Збереження результатів тестів як Artifact
       - name: Upload Test Reports as Artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: surefire-test-reports
-          path: target/surefire-reports/
+          # Вказуємо шлях до звітів з урахуванням підпапки
+          path: ваша_папка/target/surefire-reports/
