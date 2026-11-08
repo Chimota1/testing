@@ -38,4 +38,4 @@ jobs:
         with:
           name: surefire-test-reports
           # Вказуємо шлях до звітів з урахуванням підпапки
-          path: ваша_папка/target/surefire-reports/
+          path: sut-b/target/surefire-reports/
